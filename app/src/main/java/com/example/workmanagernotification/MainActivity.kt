@@ -13,6 +13,7 @@ import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ListView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
@@ -36,9 +37,16 @@ class MainActivity : AppCompatActivity() , AdapterView.OnItemClickListener {
 
         createNotificationChannel()
 
-        val workRequests : PeriodicWorkRequest = PeriodicWorkRequestBuilder<ShowNoti>(15,TimeUnit.MINUTES).build()
+        val workRequests : PeriodicWorkRequest = PeriodicWorkRequestBuilder<ShowNoti>(15,TimeUnit.MINUTES).addTag("work-work").build()
 
-        WorkManager.getInstance(this).enqueue(workRequests)
+        WorkManager.getInstance(this).getWorkInfosByTagLiveData("work-work").observe(this, Observer {
+            if(it.size == 0){
+                WorkManager.getInstance(this).enqueue(workRequests)
+            }else{
+                println(it[0].state)
+            }
+        })
+//        WorkManager.getInstance(this).enqueue(workRequests)
 
         val kelimeler = getWordList()
         for(i in kelimeler)if(i!="")list.add(i)
@@ -59,6 +67,7 @@ class MainActivity : AppCompatActivity() , AdapterView.OnItemClickListener {
             list.add("$word|$desc");
 
             veriAdaptoru.notifyDataSetChanged()
+            binding.content.word.requestFocus()
 
         }
         binding.content.word.requestFocus()
